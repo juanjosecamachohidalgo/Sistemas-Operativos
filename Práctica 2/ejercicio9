@@ -1,0 +1,10 @@
+#!/bin/bash
+if (($(expr $USER != "root")))
+then
+  else "Debes acceder como superusuario"
+  exit
+else
+FICH=/root/peligrosos.txt
+ID =$(id -u)
+[ "$ID" == "0" ] && find
+fi

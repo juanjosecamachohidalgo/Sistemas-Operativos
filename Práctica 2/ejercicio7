@@ -1,0 +1,27 @@
+#!/bin/bash
+function menu(){
+   echo "1- Hopt"
+   echo "2- Conexiones de red"
+   echo "3- Archivo de mensajes"
+   echo "4- Consumo de memoria"
+   echo "0- Salir"
+   echo -n "Elija una opcion"
+}
+
+function do_menu(){
+   case $1 in
+   1) htop;;
+   2) netstat -atunpp;
+   3) tail -f /var/logg/messages;;
+   4) free -m;;
+   0) ;;
+   *) echo "Incorrecto" $1
+   esac
+}
+
+while [ "$opcion" != "0"]
+do
+   menu
+   read opcion
+   do_menu $opcion
+done

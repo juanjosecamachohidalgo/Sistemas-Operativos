@@ -1,0 +1,135 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <errno.h>
+#include <string.h>
+#include <pwd.h>
+
+main(int argc, char *argv[])
+{
+  struct stat buf;
+  struct passwd *pwd;
+
+  //la variable argc tiene el numero de palabras escritas desde
+  //la consola para la ejecucion
+  //por ejemplo, si escribo
+  //   ./directorio  ../pr3ssoo
+  //argc guarda el numero 2 porque son dos palabras
+  //y args es un vector de cadenas de caracteres que guarda cada
+  //palabra en una posicion del vector
+  //el argv[0] es el nombre del ejecutable ./directorio
+  //y el argv[1] tiene el nombre del fichero o directorio
+  if (argc != 2)
+    {
+      printf("Debe pasar un parametro al ejecutar el programa\n");
+      exit(1);
+    }
+
+  //una vez que ya tengo los dos parametros, el vector args en la 
+  //posicion 1 guarda el nombre del directorio o archivo que 
+  //quiero comprobar, asi que le aplico la funcion stat y su
+  //resultado se guarda en la struct buf, pero si al hacer la 
+  //funcion devuelve -1, es porque no existe ese archivo o 
+  //directorio
+  if (stat(argv[1], &buf)==-1)
+    {
+      printf("Ese archivo o directorio no existe\n");
+      exit(1);
+    }
+  //la operacion & hace una puerta and bit a bit
+  //S_IFMT es una constante que vale 0170000 y se utiliza para
+  //saber el tipo de archivo 
+  //si el resultado de la puerta & es igual a S_IFDIR entonces 
+  //se trata de un directorio y si no se trata de un fichero
+  if ((buf.st_mode & S_IFMT)==S_IFDIR)
+	printf("Se trata de un directorio\n");
+  else
+	printf ("Se trata de un fichero\n");
+
+  //a continuacion tengo que dar la informacion de los permisos
+  //que tiene ese archivo o directorio para el propietario, para
+  //el grupo y para los demas
+  //la tercera cifra en hexadecimal empezando por el final indica
+  //los permisos para el propietario
+  printf("Informacion:\n");
+  printf("Permisos para el propietario(owner): ");
+  switch(buf.st_mode & 0000700)
+    {
+    case 0700 : printf("r w x\n");
+      break;
+    case 0600 : printf("r w -\n");
+      break;
+    case 0500 : printf("r - x\n");
+      break;
+    case 0400 : printf("r - -\n");
+      break;
+    case 0300 : printf("- w x\n");
+      break;
+    case 0200 : printf("- w -\n");
+      break;
+    case 0100 : printf("- - x\n");
+      break;
+    case 0000 : printf("- - -\n");
+    }
+  //la segunda cifra en hexadecimal empezando por el final indica
+  //los permisos para el grupo
+  printf("Permisos para el grupo(group): ");
+  switch(buf.st_mode & 0000070)
+    {
+    case 0070 : printf("r w x\n");
+      break;
+    case 0060 : printf("r w -\n");
+      break;
+    case 0050 : printf("r - x\n");
+      break;
+    case 0040 : printf("r - -\n");
+      break;
+    case 0030 : printf("- w x\n");
+      break;
+    case 0020 : printf("- w -\n");
+      break;
+    case 0010 : printf("- - x\n");
+      break;
+    case 0000 : printf("- - -\n");
+    }
+  //la ultima cifra en hexadecimal indica los permisos para el
+  //resto de usuarios
+  printf("Permisos para el resto (others): ");
+  switch(buf.st_mode & 0000007)
+    {
+    case 0007 : printf("r w x\n");
+      break;
+    case 0006 : printf("r w -\n");
+      break;
+    case 0005 : printf("r - x\n");
+      break;
+    case 0004 : printf("r - -\n");
+      break;
+    case 0003 : printf("- w x\n");
+      break;
+    case 0002 : printf("- w -\n");
+      break;
+    case 0001 : printf("- - x\n");
+      break;
+    case 0000 : printf("- - -\n");
+    }
+
+  //ademas tengo que sacar el nombre y el id del propietario
+  //para eso utilizo la funcion getpwuid que a partir del id del
+  //usuario que tiene el campo st_uid de la estructura buf,
+  //me devuelve el nombre del usuario en una estructura de tipo
+  //passwd
+  //si el resultado de la funcion getpwuid es NULL, no podemos
+  //decir la informacion del nombre, es desconocido
+  //en otro caso, escribo su nombre
+  pwd = getpwuid(buf.st_uid);
+  if (pwd != NULL)
+	printf ("El propietario es: %d - %s\n", buf.st_uid, 
+		pwd->pw_name);
+  else
+	printf ("El propietario es: %d - desconocido\n", buf.st_uid);
+}
+

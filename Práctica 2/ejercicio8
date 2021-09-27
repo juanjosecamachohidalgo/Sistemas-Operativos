@@ -1,0 +1,17 @@
+#!/bin/bash
+function lee_usuarios(){
+less /etc/passwd | cut ":" -f1
+echo -n "Decida nombre de usuario"
+read usuario
+id -u $usuario
+}
+
+lee_usuarios
+while [ $? != 0 ]
+do 
+  echo "No existe"
+  sleep 2
+  lee_usuarios
+done
+echo "Decida password del usuario" $usuario
+su -$usuario

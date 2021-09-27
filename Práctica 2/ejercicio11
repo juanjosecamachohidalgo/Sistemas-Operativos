@@ -1,0 +1,3 @@
+#!/bin/bash
+FICH=/var/log/reinicios.txt
+date >> $FICH

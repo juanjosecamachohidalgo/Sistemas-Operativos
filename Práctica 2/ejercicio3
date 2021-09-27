@@ -1,0 +1,8 @@
+#!/bin/bash
+if (($(expr $USER != "root")))
+then
+    else "Se debe acceder como superusuario"
+    exit
+else
+    ls /etc> /root/contenidoetc.text
+fi

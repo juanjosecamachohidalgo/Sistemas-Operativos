@@ -1,0 +1,166 @@
+#include <stdio.h>
+#include <signal.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>  	
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+void error (int n);
+
+main()				
+{
+    //Declaración de variables y estructuras de datos.
+    //Variable de tipo struct sockaddr_in. Esta estructura se
+    //utiliza para definir sockets en Internet
+    //defino dos variables de este tipo
+    struct sockaddr_in name, addr;
+    //Variable de tipo struct hostend que contiene la dirección 
+    //requerida. Tiene que ser un puntero
+    struct hostent *hostrec;
+    int conectar,servrec, buzon, newsock, flag, len;
+    char frase[41];
+    int puerto = 30033;
+
+    //Obtemos el nombre del host local y guardamos el resultado
+    //en la variable hostrec
+    if((hostrec = gethostbyname("localhost"))==NULL)
+        error(1);
+
+    //Se guarda el puerto local	en el campo sin_port de la variable
+    //de tipo sockaddr_in que se llama name
+    name.sin_port = htons(puerto);
+
+    //Se crea un socket con la funcion socket y guardo el resultado
+    //en la variable buzon
+    //los parametros que utilizo son: 
+    //- AF_INET: especifica la familia de protocolos
+    //- SOCK_STREAM: especifica el tipo de comunicacion
+    //- 0: especifica el protocolo especifico que se va utilizar
+    if((buzon=socket(AF_INET, SOCK_STREAM, 0))==-1)
+        error(3);
+
+    //Se actualiza el nombre del socket en el campo sin_family de
+    //la variable name con el resultado obtenido al ejecutar la 
+    //funcion gethostbyname
+    name.sin_family =hostrec -> h_addrtype;
+    //tambien actualizo la direccion ip
+    name.sin_addr.s_addr = INADDR_ANY;
+
+    //Se enlaza el nombre al socket utilizando la funcion bind
+    //que tiene los siguientes parametros:
+    //- buzon: identificador del buzon creado con la funcion socket
+    //- &name: direccion de la variable name de tipo sockaddr_in
+    //- sizeof(name): numero de bytes de la variable name
+    if((conectar = bind(buzon, (const struct sockaddr *)&name, sizeof(name))) == -1)
+    {	
+	close(buzon);
+	error(4);
+    }
+
+    //Escuchamos la solicitudes del cliente utilizando la funcion 
+    //listen que tiene los siguientes parametros:
+    //- buzon: identificador del buzon creado con la funcion socket
+    //- 1: numero maximo de solicitudes pmemset(&addr,0,sizeof(addr));endientes en la cola
+    if((conectar=listen(buzon,1))==-1)
+    {
+	close (buzon);
+	error(5);
+    }
+
+    //Se aceptan las solicitudes con la funcion accept que crea un
+    //nuevo buzon con las mismas propiedades del ya creado y asigna
+    //un nuevo descriptor para este nuevo buzon 
+    //la funcion memset establece la direccion de memoria del nuevo
+    //buzon a 0
+    memset(&addr,0,sizeof(addr));
+    //guardo en len el numero de bytes del nuevo buzon
+    len = sizeof (addr);
+    //ejecuto la funcion accept que tiene los siguientes parametros:
+    //buzon que quiero copiar
+    //direccion de memoria de la estructura direccion
+    //direccion de memoria de la variable que tiene el tamaño
+    if((newsock = accept(buzon,(struct sockaddr *)&addr, &len))==-1)
+    {
+	close (buzon);
+	error(6);
+    }
+
+    //pongo un bucle infinito que este recibiendo y mandando
+    //mensajes hasta que reciba el mensaje adios y en ese 
+    //momento manda el mensaje de adios al servidor para
+    //que el tambien termine
+    while(1==1)
+    {
+	//le pido que me introduzca una frase para enviarla
+	//utilizo la funcion gets en vez de scanf porque si pongo
+	//scanf solo lee palabras
+	printf(">> ");
+	gets(frase);
+
+	//envio la frase leida con la funcion send que tiene los
+	//siguientes parametros:
+	//- newsock: buzon con el que trabajo
+	//- frase: mensaje a enviar
+	//- numero de bytes del mensaje
+	//- flag: opciones a utilizar
+	if((conectar=send(newsock,frase,sizeof(frase),flag))==-1)
+	{
+	    close (newsock);
+	    error(10);
+	}
+
+	//Recibo el mensaje que el cliente nos manda
+	if((conectar = recv(newsock,frase,sizeof(frase),0))==-1)
+	{
+	    close (newsock);
+	    error(9);
+	}
+
+	//escribo por pantalla el mensaje
+	printf ("\n%s\n\n", frase);
+	fflush(stdin);
+	//si se trata del mensaje adios, le reenvio el mensaje 
+	//para terminar la conexion y rompo el bucle con break
+	if((strcmp(frase,"adios"))==0)
+	{
+	    if((conectar=send(newsock,frase,sizeof(frase),flag))==-1)
+	    {
+		close (newsock);
+		error(10);
+	    }
+	    break;
+	}
+	//si no es adios el mensaje recibido comienzo de nuevo 
+	//el bucle para pedir otra frase y seguir en el chat
+    }
+
+    //Una vez que no se necesita realizar más accesos al socket  
+    //lo cerramos
+    if(close(newsock)==-1)
+	error(8);
+}
+
+
+void error(int n)
+{
+   
+    switch(n){
+	case 1: printf("Error en gethostbyname \n"); break;
+	case 2: printf("Error en getservbyname \n"); break;
+	case 3: printf("Error en socket \n"); break;
+	case 4: printf("Error en bind \n"); break;
+	case 5: printf("Error en listen \n"); break;
+	case 6: printf("Error en accept \n"); break;
+	case 7: printf("Error en recv \n"); break;
+	case 8: printf("Error en close \n"); break;
+	case 9: printf("Error en connect \n"); break;
+	case 10: printf("Error en send \n"); break;
+    }
+   
+    exit(1);
+}

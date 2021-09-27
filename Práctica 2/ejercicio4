@@ -1,0 +1,12 @@
+#!/bin/bash
+if (($(expr $USER != "root")))
+then
+   else "Debes de acceder como superusuario"
+   exit
+else
+ID=$(id -u)
+if [ "$ID" != "0"]
+then
+   cat /etc/passwd
+   cat /etc/shadow
+fi

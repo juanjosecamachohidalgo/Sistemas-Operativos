@@ -1,0 +1,129 @@
+#include <stdio.h>
+#include <signal.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>  	
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+void error (int n);
+
+main()				
+{
+    struct sockaddr_in name, addr;
+    struct hostent *hostrec;
+    int conectar,servrec, buzon, newsock, flag, len;
+    char frase[41];
+    int puerto = 30033;
+
+    //host local
+    if((hostrec = gethostbyname("localhost"))==NULL)
+        error(1);
+
+    //puerto local
+    name.sin_port = htons(puerto);
+
+    if((buzon=socket(AF_INET, SOCK_STREAM, 0))==-1)
+        error(3);
+
+    name.sin_family =hostrec -> h_addrtype;
+    //direccion ip act.
+    name.sin_addr.s_addr = INADDR_ANY;
+
+    //enlace de nombre a socket:
+    //- buzon: identificador del buzon creado con la funcion socket
+    //- &name: direccion de la variable name de tipo sockaddr_in
+    //- sizeof(name): numero de bytes de la variable name
+    if((conectar = bind(buzon, (const struct sockaddr *)&name, sizeof(name))) == -1)
+    {	
+	close(buzon);
+	error(4);
+    }
+
+    //lectura de solicitudes:
+    //- buzon: identificador del buzon creado con la funcion socket
+    //- 1: numero maximo de solicitudes pmemset(&addr,0,sizeof(addr))pendientes en la cola
+    if((conectar=listen(buzon,1))==-1)
+    {
+	close (buzon);
+	error(5);
+    }
+
+    //Aceptación:
+    //la funcion memset establece la direccion de memoria del nuevo
+    //buzon a 0
+    memset(&addr,0,sizeof(addr));
+    //guardo en len el numero de bytes del nuevo buzon
+    len = sizeof (addr);
+    //ejecuto la funcion accept que tiene los siguientes parametros:
+    //buzon que quiero copiar
+    //direccion de memoria de la estructura direccion
+    //direccion de memoria de la variable que tiene el tamaño
+    if((newsock = accept(buzon,(struct sockaddr *)&addr, &len))==-1)
+    {
+	close (buzon);
+	error(6);
+    }
+
+   
+    while(1==1)
+    {
+	
+	printf(">> ");
+	scanf(frase);
+
+	//envio de frase leida:
+	//- newsock: buzon con el que trabajo
+	//- frase: mensaje a enviar
+	//- numero de bytes del mensaje
+	//- flag: opciones a utilizar
+	if((conectar=send(newsock,frase,sizeof(frase),flag))==-1)
+	{
+	    close (newsock);
+	    error(10);
+	}
+
+	if((conectar = recv(newsock,frase,sizeof(frase),0))==-1)
+	{
+	    close (newsock);
+	    error(9);
+	}
+	printf ("\n%s\n\n", frase);
+	fflush(stdin);
+	if((strcmp(frase,"adios"))==0)
+	{
+	    if((conectar=send(newsock,frase,sizeof(frase),flag))==-1)
+	    {
+		close (newsock);
+		error(10);
+	    }
+	    break;
+    }
+
+    if(close(newsock)==-1)
+	error(8);
+}
+
+
+void error(int n)
+{
+   
+    switch(n){
+	case 1: printf("Error en gethostbyname \n"); break;
+	case 2: printf("Error en getservbyname \n"); break;
+	case 3: printf("Error en socket \n"); break;
+	case 4: printf("Error en bind \n"); break;
+	case 5: printf("Error en listen \n"); break;
+	case 6: printf("Error en accept \n"); break;
+	case 7: printf("Error en recv \n"); break;
+	case 8: printf("Error en close \n"); break;
+	case 9: printf("Error en connect \n"); break;
+	case 10: printf("Error en send \n"); break;
+    }
+   
+    exit(1);
+}

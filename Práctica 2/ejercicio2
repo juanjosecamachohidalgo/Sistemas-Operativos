@@ -1,0 +1,16 @@
+#!/bin/bash
+echo -n "Introduce el valor de la variable a: "
+read numeroA
+echo -n "Introduce el valor de la variable b: "
+read numeroB
+echo -n "Introduce el valor de la variable c: "
+read numeroC
+echo "El valor de A es: "$numeroA
+echo "El valor de B es: "$numeroB
+echo "El valor de C es: "$numeroC
+suma=$(expr $numeroA + $numeroB)
+suma2=$(expr $suma + $numeroC)
+echo "La suma es: "$suma2
+multiplicacion=$(expr $numeroA \* $numeroB)
+multiplicacion2=$(expr $multiplicacion \* $numeroC)
+echo "La multiplicacion es: "$multiplicacion2

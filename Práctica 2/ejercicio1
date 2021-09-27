@@ -1,0 +1,7 @@
+#!/bin/bash
+numero=5
+echo "El primer parámetro es: "$numero
+numero2=10
+echo "El segundo parámetro es: "$numero2
+resultado=$(expr $numero + $numero2)
+echo "El valor de la suma es: "$resultado
